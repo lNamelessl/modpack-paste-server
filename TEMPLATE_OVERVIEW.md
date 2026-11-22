@@ -2,7 +2,7 @@
 
 Paste a Modrinth modpack page URL and get a running modded Minecraft server, with the world on a persistent volume and a live readiness page.
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/modpack-paste-server)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/modpack-paste-serv-1)
 
 The template boots ready to play with Cobblemon Fabric on Minecraft 1.21.1. Replace one variable with any other Modrinth pack page and it reinstalls itself. CurseForge page URLs work too once you add your own API key.
 
