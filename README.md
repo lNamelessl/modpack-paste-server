@@ -4,7 +4,7 @@ Paste a Modrinth modpack page URL and get a running modded Minecraft server, wit
 world on a persistent volume, a live status page, and a healthcheck that never fails
 because a 400 MB pack is still downloading.
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/modpack-paste-server)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/modpack-paste-serv-1)
 
 ## Why this exists
 
