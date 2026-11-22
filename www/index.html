@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modpack Paste Server</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; padding: 40px 20px;
+    font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1c2a3a 0%, #0d1117 60%);
+    color: #e6edf3;
+  }
+  main { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .sub { color: #8b98a5; margin: 0 0 28px; font-size: 0.95rem; }
+  .card {
+    background: #161b22; border: 1px solid #2a333d; border-radius: 12px;
+    padding: 20px 22px; margin-bottom: 16px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 5px 11px; border-radius: 999px; background: #1f6feb22;
+    border: 1px solid #1f6feb55; color: #79c0ff; margin-bottom: 12px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #79c0ff; }
+  .dot.ok { background: #3fb950; }
+  .dot.wait { background: #d29922; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+  dl { display: grid; grid-template-columns: 140px 1fr; gap: 8px 16px; margin: 0; }
+  dt { color: #8b98a5; }
+  dd { margin: 0; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9rem; }
+  h2 { font-size: 1rem; margin: 0 0 10px; }
+  ol { margin: 0; padding-left: 20px; color: #c9d1d9; }
+  ol li { margin-bottom: 7px; }
+  code { background: #21262d; padding: 1px 6px; border-radius: 5px; font-size: 0.87em; }
+  a { color: #79c0ff; }
+  .muted { color: #8b98a5; font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Modpack Paste Server</h1>
+  <p class="sub">Paste a modpack URL, get a running modded Minecraft server. This page is served by the container itself and never calls out to the internet.</p>
+
+  <div class="card">
+    <div class="pill"><span class="dot" id="dot"></span><span id="badge">checking</span></div>
+    <dl>
+      <dt>Phase</dt><dd id="phase">-</dd>
+      <dt>Detail</dt><dd id="detail">-</dd>
+      <dt>Pack</dt><dd id="pack">-</dd>
+      <dt>Memory</dt><dd id="memory">-</dd>
+      <dt>Game port</dt><dd id="gport">-</dd>
+      <dt>Ready</dt><dd id="ready">no</dd>
+      <dt>Updated</dt><dd id="updated">-</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Connect to your server</h2>
+    <ol>
+      <li>Open this service in Railway, then <b>Settings</b>, then <b>Networking</b>.</li>
+      <li>Under <b>TCP Proxy</b>, enter <code>25565</code> and create the proxy.</li>
+      <li>Railway shows a host and port. Add those in Minecraft under Multiplayer, Direct Connection.</li>
+      <li>Install the exact same modpack version on your client, then join.</li>
+    </ol>
+    <p class="muted">Your world, mods, configs and RCON password live on the volume at <code>/data</code>, so redeploys keep everything.</p>
+  </div>
+
+  <div class="card">
+    <h2>Changing the pack</h2>
+    <p class="muted">Set <code>MODPACK_URL</code> to a different Modrinth pack page (or a CurseForge page plus <code>CF_API_KEY</code>) and Railway redeploys automatically. Existing worlds are kept.</p>
+  </div>
+</main>
+<script>
+  function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el && value) el.textContent = value;
+  }
+  function parse(text) {
+    var out = {};
+    text.split('\n').forEach(function (line) {
+      var i = line.indexOf(':');
+      if (i > 0) out[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+    });
+    return out;
+  }
+  async function refresh() {
+    var dot = document.getElementById('dot');
+    var badge = document.getElementById('badge');
+    try {
+      var res = await fetch('health', { cache: 'no-store' });
+      if (!res.ok) throw new Error('health ' + res.status);
+      var state = parse(await res.text());
+      setText('phase', state.phase);
+      setText('detail', state.detail);
+      setText('pack', state.pack);
+      setText('memory', state.memory);
+      setText('gport', state.game_port);
+      setText('updated', state.updated_at);
+
+      var ready = await fetch('ready', { cache: 'no-store' });
+      var isReady = ready.ok;
+      setText('ready', isReady ? 'yes' : 'not yet');
+      if (isReady) {
+        dot.className = 'dot ok';
+        badge.textContent = 'server ready';
+      } else if (state.phase && state.phase.indexOf('needs_') === 0) {
+        dot.className = 'dot wait';
+        badge.textContent = 'action needed';
+      } else {
+        dot.className = 'dot wait';
+        badge.textContent = 'working';
+      }
+    } catch (err) {
+      dot.className = 'dot wait';
+      badge.textContent = 'supervisor offline';
+    }
+  }
+  refresh();
+  setInterval(refresh, 5000);
+</script>
+</body>
+</html>

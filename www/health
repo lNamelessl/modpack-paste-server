@@ -1,0 +1,6 @@
+phase: booting
+detail: supervisor starting, no state written yet
+memory: 6G
+pack: not-set
+game_port: 25565
+updated_at: unknown
